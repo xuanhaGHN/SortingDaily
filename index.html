@@ -328,7 +328,10 @@ function parseCSV(text) {
     const vals = parseCSVLine(lines[i]);
     if (vals.length < 8) continue;
     const obj = {};
-    headers.forEach((h,j) => obj[h] = (vals[j]||'').replace(/^"|"$/g,'').trim());
+    // Chỉ map 8 cột đầu tiên để tránh lỗi trùng tên cột (ví dụ cột phanloai xuất hiện lần 2 ở cột 13)
+    for (let j = 0; j < 8; j++) {
+      if (headers[j]) obj[headers[j]] = (vals[j]||'').replace(/^"|"$/g,'').trim();
+    }
     const slg = parseInt(obj['Slg_xe'] || obj['Slg xe'] || '0');
     if (isNaN(slg) || slg <= 0) continue;
     // Normalize phanloai: map variants to standard values
