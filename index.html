@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dashboard Sorting - Kho Trung Chuyển Hà Nội 02</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#f4f6f8;--card:#ffffff;--card2:#f9fafb;--accent:#F26522;--accent2:#00467F;--green:#10b981;--red:#ef4444;--orange:#f59e0b;--text:#1f2937;--text2:#4b5563;--border:#e5e7eb;--radius:16px}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.layout{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+.sidebar{background:var(--card);border-right:1px solid var(--border);padding:24px 16px;display:flex;flex-direction:column;gap:8px;position:sticky;top:0;height:100vh}
+.logo{font-size:20px;font-weight:800;padding:16px;margin-bottom:16px;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-item{padding:12px 16px;border-radius:12px;cursor:pointer;color:var(--text2);font-size:14px;font-weight:500;transition:.2s;display:flex;align-items:center;gap:12px}
+.nav-item:hover,.nav-item.active{background:var(--card2);color:var(--text)}
+.nav-item.active{background:linear-gradient(135deg,rgba(242,101,34,.1),rgba(0,70,127,.05));color:var(--accent);border:1px solid rgba(242,101,34,.3)}
+.main{padding:24px 32px;overflow-y:auto}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px}
+.header h1{font-size:24px;font-weight:700}
+.header-right{display:flex;gap:12px;align-items:center}
+.upload-btn{background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#fff;padding:10px 20px;border-radius:12px;font-weight:600;cursor:pointer;font-size:13px;transition:.3s}
+.upload-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(242,101,34,.4)}
+.date-badge{background:var(--card2);padding:8px 16px;border-radius:10px;font-size:13px;color:var(--text2)}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-bottom:28px}
+.kpi-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;position:relative;overflow:hidden;transition:.3s;box-shadow:0 4px 6px -1px rgba(0,0,0,0.05)}
+.kpi-card:hover{transform:translateY(-4px);box-shadow:0 10px 15px -3px rgba(0,0,0,0.1)}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px}
+.kpi-card:nth-child(1)::before{background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.kpi-card:nth-child(2)::before{background:linear-gradient(90deg,var(--green),#34d399)}
+.kpi-card:nth-child(3)::before{background:linear-gradient(90deg,var(--orange),#fbbf24)}
+.kpi-card:nth-child(4)::before{background:linear-gradient(90deg,var(--red),#f472b6)}
+.kpi-label{font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:600}
+.kpi-value{font-size:28px;font-weight:800;margin-bottom:4px;color:var(--text)}
+.kpi-sub{font-size:12px;color:var(--text2)}
+.kpi-trend{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:2px 8px;border-radius:6px}
+.kpi-trend.up{color:var(--green);background:rgba(16,185,129,.1)}
+.kpi-trend.down{color:var(--red);background:rgba(239,68,68,.1)}
+.charts-grid{display:grid;grid-template-columns:2fr 1fr;gap:20px;margin-bottom:28px}
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.05)}
+.chart-title{font-size:15px;font-weight:700;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;color:var(--text)}
+.chart-container{position:relative;height:280px}
+.risk-section{margin-bottom:28px}
+.risk-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.risk-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.05)}
+.risk-card.danger{border-color:rgba(239,68,68,.4);background:linear-gradient(135deg,rgba(239,68,68,.05),transparent)}
+.risk-card.warning{border-color:rgba(245,158,11,.4);background:linear-gradient(135deg,rgba(245,158,11,.05),transparent)}
+.risk-card.safe{border-color:rgba(16,185,129,.4);background:linear-gradient(135deg,rgba(16,185,129,.05),transparent)}
+.risk-badge{display:inline-block;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:700;text-transform:uppercase;margin-bottom:8px}
+.risk-badge.danger{background:rgba(239,68,68,.15);color:var(--red)}
+.risk-badge.warning{background:rgba(245,158,11,.15);color:var(--orange)}
+.risk-badge.safe{background:rgba(16,185,129,.15);color:var(--green)}
+.table-section{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:28px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.05)}
+.table-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.search-input{background:var(--card2);border:1px solid var(--border);color:var(--text);padding:10px 16px;border-radius:10px;font-size:13px;width:280px;transition:.2s}
+.search-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(242,101,34,.1)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:12px 10px;border-bottom:2px solid var(--border);color:var(--text2);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.5px;background:var(--card2)}
+td{padding:10px;border-bottom:1px solid var(--border)}
+tr:hover{background:var(--card2)}
+.cap-bar{width:80px;height:6px;background:#e5e7eb;border-radius:3px;overflow:hidden;display:inline-block;vertical-align:middle;margin-left:6px}
+.cap-fill{height:100%;border-radius:3px;transition:.3s}
+.section-title{font-size:16px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.planning-section{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:28px}
+.planning-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.plan-input{background:var(--card2);border:1px solid var(--border);color:var(--text);padding:12px;border-radius:10px;font-size:14px;width:100%}
+.plan-input:focus{outline:none;border-color:var(--accent)}
+.plan-label{font-size:12px;color:var(--text2);margin-bottom:6px;font-weight:600}
+.plan-result{font-size:24px;font-weight:800;color:var(--accent)}
+.tab-bar{display:flex;gap:8px;margin-bottom:20px}
+.tab{padding:8px 16px;border-radius:8px;font-size:13px;cursor:pointer;color:var(--text2);background:transparent;border:1px solid var(--border);transition:.2s;font-weight:500}
+.tab.active{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 4px 6px rgba(242,101,34,.2)}
+.hidden{display:none}
+select{background:var(--card2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;font-size:13px;font-weight:500}
+select:focus{outline:none;border-color:var(--accent)}
+@media(max-width:1024px){.layout{grid-template-columns:1fr}.sidebar{display:none}.kpi-grid{grid-template-columns:repeat(2,1fr)}.charts-grid{grid-template-columns:1fr}}
+
+</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<style>
+  .alert-list{max-height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+  .alert-item{padding:10px 14px;border-radius:10px;font-size:13px;display:flex;align-items:center;gap:10px;animation:fadeIn .3s}
+  .alert-icon{font-size:16px}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  /* Alert styles in HTML */
+  .alert-item.danger{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.35);color:#ef4444}
+  .alert-item.warning{background:rgba(245,158,11,.10);border:1px solid rgba(245,158,11,.3);color:#f59e0b}
+  
+  .upload-zone{border:2px dashed var(--border);border-radius:16px;padding:32px;text-align:center;cursor:pointer;transition:.3s}
+  .upload-zone:hover{border-color:var(--accent);background:rgba(242,101,34,.05)}
+  .upload-zone input{display:none}
+  .loading-overlay{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;gap:16px}
+  .spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite}
+  .sim-output{background:var(--card2);border-radius:12px;padding:20px;margin-top:16px}
+  .sim-result{font-size:22px;font-weight:800;color:var(--accent)}
+  .filter-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  .heatmap-table{width:100%;border-collapse:separate;border-spacing:3px;font-size:11px}
+  .heatmap-table th{padding:6px 4px;color:var(--text2);font-weight:500;font-size:10px;text-align:center}
+  .heatmap-table td{padding:6px 4px;text-align:center;border-radius:6px;font-weight:600;font-size:11px;transition:.2s}
+  .heatmap-table td:hover{transform:scale(1.1);z-index:1;position:relative}
+  .compare-table{width:100%;border-collapse:collapse;font-size:12px}
+  .compare-table th{padding:10px 8px;border-bottom:2px solid var(--border);color:var(--text2);font-weight:600;font-size:11px;text-transform:uppercase}
+  .compare-table td{padding:8px;border-bottom:1px solid var(--border);font-size:12px}
+  .compare-table tr:hover{background:var(--card2)}
+  .compare-table .trend-up{color:#00b894;font-weight:600}
+  .compare-table .trend-down{color:#ff7675;font-weight:600}
+  .charts-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-bottom:28px}
+  @media(max-width:1024px){.charts-grid-3{grid-template-columns:1fr}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loading">
+  <div class="spinner"></div>
+  <div style="color:var(--text2);font-size:14px">Đang tải dữ liệu...</div>
+</div>
+
+<div class="layout" id="app" style="display:none">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo">🚛 Sorting Daily</div>
+    <div class="nav-item active" onclick="showPage('overview')" id="nav-overview">📊 Tổng quan</div>
+    <div class="nav-item" onclick="showPage('charts')" id="nav-charts">📈 Biểu đồ Chi tiết</div>
+    <div class="nav-item" onclick="showPage('alerts')" id="nav-alerts">🔔 Cảnh báo</div>
+
+    <div style="margin-top:auto;padding:16px;font-size:11px;color:var(--text2)">
+      <div>Kho TC Hà Nội 02</div>
+      <div>Cập nhật: 26/05/2026</div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="header">
+      <h1 id="page-title">📊 Tổng quan Sorting</h1>
+      <div class="header-right">
+        <label class="upload-btn" id="upload-trigger">📁 Tải CSV
+          <input type="file" accept=".csv" id="file-input" style="display:none">
+        </label>
+        <div class="date-badge" id="date-badge">📅 01/05 – 21/05/2026</div>
+      </div>
+    </div>
+
+    <!-- PAGE: OVERVIEW -->
+    <div id="page-overview">
+      <div class="kpi-grid">
+        <div class="kpi-card"><div class="kpi-label">Tổng xe Nhập</div><div class="kpi-value" id="kpi-in">0</div><div class="kpi-sub">lượt xe</div></div>
+        <div class="kpi-card"><div class="kpi-label">Tổng xe Xuất</div><div class="kpi-value" id="kpi-out">0</div><div class="kpi-sub">lượt xe</div></div>
+        <div class="kpi-card"><div class="kpi-label">Giờ cao điểm</div><div class="kpi-value" id="kpi-peak">—</div><div class="kpi-sub" id="kpi-peak-sub"></div></div>
+        <div class="kpi-card"><div class="kpi-label">Loại xe phổ biến</div><div class="kpi-value" id="kpi-type">—</div><div class="kpi-sub" id="kpi-type-sub"></div></div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-title">Nhập / Xuất theo Giờ
+            <select id="hourly-date" onchange="updateHourlyChart()"></select>
+          </div>
+          <div class="chart-container"><canvas id="hourlyChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Phân bổ Trọng tải Xe</div>
+          <div class="chart-container"><canvas id="vehicleChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-title">Xu hướng Nhập / Xuất theo Ngày</div>
+          <div class="chart-container"><canvas id="dailyChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Phân tích theo Loại Tuyến</div>
+          <div class="chart-container"><canvas id="laneChart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- SO SÁNH GIỮA CÁC NGÀY -->
+      <div class="table-section">
+        <div class="chart-title">📊 So sánh Chi tiết giữa các Ngày</div>
+        <div style="overflow-x:auto"><table class="compare-table"><thead><tr>
+          <th>Ngày</th><th>Xe Nhập</th><th>Xe Xuất</th><th>Tổng xe</th><th>KG (tấn)</th><th>Giờ cao điểm</th><th>Loại xe chính</th><th>Trend Xe</th><th>Trend KG</th>
+        </tr></thead><tbody id="compare-daily"></tbody></table></div>
+      </div>
+
+      <!-- HEATMAP GIỜ x NGÀY -->
+      <div class="chart-card" style="margin-bottom:28px">
+        <div class="chart-title">🔥 Heatmap: Số lượng Xe theo Giờ x Ngày
+          <select id="heatmap-type" onchange="renderHeatmap()" style="font-size:12px">
+            <option value="">Tất cả (Nhập+Xuất)</option>
+          </select>
+        </div>
+        <div style="overflow-x:auto"><table class="heatmap-table" id="heatmap-table"></table></div>
+      </div>
+    </div>
+
+    <!-- PAGE: CHARTS -->
+    <div id="page-charts" class="hidden">
+      <div class="filter-row" style="margin-bottom:20px">
+        <select id="chart-filter-type" onchange="updateDetailCharts()">
+          <option value="">Tất cả loại</option>
+        </select>
+        <select id="chart-filter-lane" onchange="updateDetailCharts()">
+          <option value="">Tất cả tuyến</option>
+        </select>
+        <select id="chart-filter-vehicle" onchange="updateDetailCharts()">
+          <option value="">Tất cả trọng tải</option>
+        </select>
+      </div>
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-title">Chi tiết theo Giờ (Đã lọc)</div>
+          <div class="chart-container"><canvas id="detailHourly"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Tỉ trọng Trọng tải (Đã lọc)</div>
+          <div class="chart-container"><canvas id="detailVehicle"></canvas></div>
+        </div>
+      </div>
+
+      <!-- TỶ TRỌNG XE THEO TUYẾN/NGÀY -->
+      <div class="chart-card" style="margin-bottom:20px">
+        <div class="chart-title">🛣️ Tỷ trọng Xe Nhập/Xuất theo Tuyến - theo Ngày
+          <select id="lane-day-type" onchange="updateLaneDayChart()" style="font-size:12px">
+            <option value="">Nhập + Xuất</option>
+          </select>
+        </div>
+        <div class="chart-container" style="height:320px"><canvas id="laneDayChart"></canvas></div>
+      </div>
+
+      <!-- SO SÁNH LOẠI XE THEO GIỜ GIỮA CÁC NGÀY -->
+      <div class="chart-card" style="margin-bottom:20px">
+        <div class="chart-title">🚛 So sánh Loại xe theo Giờ giữa các Ngày
+          <div class="filter-row" style="gap:8px">
+            <select id="veh-hour-day1" onchange="updateVehHourCompare()" style="font-size:12px"></select>
+            <span style="color:var(--text2);font-size:12px">vs</span>
+            <select id="veh-hour-day2" onchange="updateVehHourCompare()" style="font-size:12px"></select>
+          </div>
+        </div>
+        <div class="chart-container" style="height:320px"><canvas id="vehHourCompare"></canvas></div>
+      </div>
+
+      <!-- SO SÁNH SỐ LƯỢNG XE THEO GIỜ GIỮA NHIỀU NGÀY -->
+      <div class="chart-card" style="margin-bottom:20px">
+        <div class="chart-title">📊 So sánh Tổng xe theo Giờ - Chồng nhiều Ngày
+          <select id="multi-day-count" onchange="updateMultiDayChart()" style="font-size:12px">
+            <option value="3">3 ngày gần nhất</option>
+            <option value="5">5 ngày gần nhất</option>
+            <option value="7" selected>7 ngày gần nhất</option>
+            <option value="0">Tất cả</option>
+          </select>
+        </div>
+        <div class="chart-container" style="height:320px"><canvas id="multiDayChart"></canvas></div>
+      </div>
+
+      <div class="table-section">
+        <div class="chart-title">Top Lộ trình theo Số lượng Xe</div>
+        <table>
+          <thead><tr><th>#</th><th>Lộ trình</th><th>Loại</th><th>Tuyến</th><th>Trọng tải</th><th>Tổng xe</th></tr></thead>
+          <tbody id="route-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PAGE: ALERTS -->
+    <div id="page-alerts" class="hidden">
+      <div class="section-title">🔔 Hệ thống Cảnh báo</div>
+
+      <!-- KPI tổng quan cảnh báo -->
+      <div class="kpi-grid" style="margin-bottom:20px">
+        <div class="kpi-card"><div class="kpi-label">Xe Nhập (Đơn)</div><div class="kpi-value" style="color:var(--accent)" id="alert-total-in">0</div><div class="kpi-sub">lượt xe nhập</div></div>
+        <div class="kpi-card"><div class="kpi-label">Xe Xuất (Đơn)</div><div class="kpi-value" style="color:var(--accent2)" id="alert-total-out">0</div><div class="kpi-sub">lượt xe xuất</div></div>
+        <div class="kpi-card"><div class="kpi-label">KG Nhập / Xuất</div><div class="kpi-value" style="color:var(--orange)" id="alert-total-kg">0</div><div class="kpi-sub">tấn hàng (thực tế)</div></div>
+        <div class="kpi-card"><div class="kpi-label">TB KG/ngày</div><div class="kpi-value" style="color:var(--green)" id="alert-avg-kg">0</div><div class="kpi-sub">tấn/ngày</div></div>
+      </div>
+
+      <!-- Thẻ cảnh báo -->
+      <div class="risk-grid" style="margin-bottom:20px">
+        <div class="risk-card danger"><div class="risk-badge danger">Giờ cao bất thường</div><div class="kpi-value" style="color:var(--red)" id="alert-hourly-count">0</div><div class="kpi-sub">khung giờ vượt TB giờ đó</div></div>
+        <div class="risk-card warning"><div class="risk-badge warning">Ngày cao bất thường</div><div class="kpi-value" style="color:var(--orange)" id="alert-daily-count">0</div><div class="kpi-sub">ngày vượt TB chung</div></div>
+        <div class="risk-card safe"><div class="risk-badge safe">Bình thường</div><div class="kpi-value" style="color:var(--green)" id="alert-safe-count">0</div><div class="kpi-sub">ngày hoạt động ổn</div></div>
+      </div>
+
+      <!-- Phân tích khung giờ cao điểm -->
+      <div class="chart-card" style="margin-bottom:20px">
+        <div class="chart-title">🕐 Phân tích Khung giờ Cao điểm</div>
+        <div style="overflow-x:auto"><table class="compare-table">
+          <thead><tr><th>Khung giờ</th><th>TB xe</th><th>TB Nhập</th><th>TB Xuất</th><th>TB KL (tấn)</th><th>Max xe</th><th>Ngày cao nhất</th><th>Mức độ</th></tr></thead>
+          <tbody id="peak-hour-table"></tbody>
+        </table></div>
+      </div>
+
+      <!-- Chi tiết cảnh báo -->
+      <div class="chart-card">
+        <div class="chart-title">📋 Chi tiết Cảnh báo</div>
+        <div class="alert-list" id="alert-list"></div>
+      </div>
+    </div>
+
+
+  </main>
+</div>
+
+<script>
+// ===== GLOBALS =====
+let DATA = [];
+let PROD_DATA = []; // Sản lượng thực tế (đơn + kg)
+let charts = {};
+const SHEET_ID = '1yPPDvKaDqx_4T_A_axv-d_MrXNWCc8Al00FmG2Pego0';
+const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=1104033792`;
+const PROD_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=1105617326`;
+const VEHICLE_COSTS = {'1.9T':1200000,'5T':2500000,'6.5T':3200000,'8T':4000000,'15T':6500000};
+const VEHICLE_CAPS = {'1.9T':1.9,'5T':5,'6.5T':6.5,'8T':8,'15T':15};
+const TIME_SLOTS = Array.from({length:24},(_,i)=>`${i}--${i+1}`);
+const COLORS = {accent:'#F26522',accent2:'#00467F',green:'#10b981',red:'#ef4444',orange:'#f59e0b',pink:'#ec4899'};
+const GRID_COLOR = 'rgba(0,0,0,0.06)';
+const TICK_COLOR = '#6b7280';
+
+// ===== CSV PARSER =====
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  if (lines.length < 2) return [];
+  const headers = parseCSVLine(lines[0]).map(h => h.trim().replace(/^"|"$/g,''));
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const vals = parseCSVLine(lines[i]);
+    if (vals.length < 8) continue;
+    const obj = {};
+    headers.forEach((h,j) => obj[h] = (vals[j]||'').replace(/^"|"$/g,'').trim());
+    const slg = parseInt(obj['Slg_xe'] || obj['Slg xe'] || '0');
+    if (isNaN(slg) || slg <= 0) continue;
+    // Normalize phanloai: map variants to standard values
+    let pl = (obj['phanloai']||'').normalize('NFC').trim();
+    if (/nh[aậ]p/i.test(pl)) pl = 'Nhập';
+    else if (/xu[aấ]t/i.test(pl)) pl = 'Xuất';
+    rows.push({
+      ngay: obj['ngay']||'', stoppoint: obj['stoppoint_name']||'',
+      khung_gio: obj['khung_gio']||'', phanloai: pl,
+      trong_tai: obj['trong_tai']||'', lane_type: obj['lane_type']||'',
+      lo_trinh: obj['lo_trinh']||'', slg_xe: slg
+    });
+  }
+  return rows;
+}
+
+function parseCSVLine(line) {
+  const result = []; let cur = ''; let inQuote = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (inQuote) { if (c === '"' && line[i+1] === '"') { cur += '"'; i++; } else if (c === '"') { inQuote = false; } else { cur += c; } }
+    else { if (c === '"') { inQuote = true; } else if (c === ',') { result.push(cur); cur = ''; } else { cur += c; } }
+  }
+  result.push(cur);
+  return result;
+}
+
+// ===== PRODUCTION DATA PARSER (Sản lượng + KG thực tế) =====
+function parseNum(s) {
+  if (!s) return 0;
+  // Handle Vietnamese number format: 1.234 = 1234, 1.234.567 = 1234567
+  s = s.replace(/\s/g,'').replace(/^"|"$/g,'');
+  // If contains dots as thousands separator (e.g. "1.193.430")
+  if (/^\d{1,3}(\.\d{3})+$/.test(s)) return parseInt(s.replace(/\./g,''));
+  // If contains dot as decimal (e.g. "10029.2")
+  return parseFloat(s) || 0;
+}
+
+function parseProdCSV(text) {
+  const lines = text.trim().split('\n');
+  if (lines.length < 2) return [];
+  const headers = parseCSVLine(lines[0]).map(h => h.trim().replace(/^"|"$/g,''));
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const vals = parseCSVLine(lines[i]);
+    if (vals.length < 10) continue;
+    const obj = {};
+    headers.forEach((h,j) => obj[h] = (vals[j]||'').replace(/^"|"$/g,'').trim());
+    const dt = obj['dt'] || '';
+    if (!dt || dt === 'dt') continue;
+      // Chuẩn hóa khung giờ: '0' -> '0--1', '13' -> '13--14'
+      const rawH = parseInt(obj['khung_gio'] || '0');
+      const khungGio = `${rawH}--${rawH+1}`;
+      rows.push({
+        ngay: dt,
+        kho: obj['kho'] || '',
+        khung_gio: khungGio,
+      san_luong_nhap: parseNum(obj['san_luong_nhap']),
+      kgs_nhap: parseNum(obj['kgs_nhap']),
+      san_luong_pack: parseNum(obj['san_luong_pack']),
+      kgs_pack: parseNum(obj['kgs_pack']),
+      san_luong_unpack: parseNum(obj['san_luong_unpack']),
+      kgs_unpack: parseNum(obj['kgs_unpack']),
+      san_luong_export: parseNum(obj['san_luong_export']),
+      kgs_export: parseNum(obj['kgs_export'])
+    });
+  }
+  return rows;
+}
+
+// Lấy kg thực tế từ PROD_DATA theo ngày + khung giờ
+function getRealKg(ngay, khungGio) {
+  // Cả 2 đều dùng format "0--1", "13--14"
+  const match = PROD_DATA.find(r => r.ngay === ngay && r.khung_gio === khungGio);
+  if (!match) return null;
+  return { kgs_nhap: match.kgs_nhap, kgs_export: match.kgs_export, sl_nhap: match.san_luong_nhap, sl_export: match.san_luong_export, sl_pack: match.san_luong_pack, sl_unpack: match.san_luong_unpack, kgs_pack: match.kgs_pack, kgs_unpack: match.kgs_unpack };
+}
+
+// ===== DATA AGGREGATION =====
+function agg(data, key) {
+  const m = {}; data.forEach(r => { const k = r[key]; m[k] = (m[k]||0) + r.slg_xe; });
+  return m;
+}
+
+function aggMulti(data, keys) {
+  const m = {}; data.forEach(r => { const k = keys.map(x=>r[x]).join('|'); m[k] = (m[k]||0) + r.slg_xe; });
+  return m;
+}
+
+function getDates() { return [...new Set(DATA.map(r=>r.ngay))].sort(); }
+function fmt(n) { return n.toLocaleString('vi-VN'); }
+
+// ===== NAVIGATION =====
+function showPage(page) {
+  document.querySelectorAll('[id^="page-"]').forEach(p => p.classList.add('hidden'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.remove('hidden');
+  document.getElementById('nav-'+page).classList.add('active');
+  const titles = {overview:'📊 Tổng quan Sorting',charts:'📈 Biểu đồ Chi tiết',alerts:'🔔 Cảnh báo'};
+  document.getElementById('page-title').textContent = titles[page]||'';
+}
+
+// ===== KPIs =====
+function updateKPIs() {
+  const inTotal = DATA.filter(r=>r.phanloai==='Nhập').reduce((s,r)=>s+r.slg_xe,0);
+  const outTotal = DATA.filter(r=>r.phanloai==='Xuất').reduce((s,r)=>s+r.slg_xe,0);
+  document.getElementById('kpi-in').textContent = fmt(inTotal);
+  document.getElementById('kpi-out').textContent = fmt(outTotal);
+
+  // Peak hour
+  const hourlyTotal = {};
+  DATA.forEach(r => { hourlyTotal[r.khung_gio] = (hourlyTotal[r.khung_gio]||0) + r.slg_xe; });
+  let peakH = '', peakV = 0;
+  Object.entries(hourlyTotal).forEach(([h,v]) => { if (v > peakV) { peakH = h; peakV = v; } });
+  document.getElementById('kpi-peak').textContent = peakH || '—';
+  document.getElementById('kpi-peak-sub').textContent = peakV ? `${fmt(peakV)} xe tổng cộng` : '';
+
+  // Most used vehicle type
+  const byType = agg(DATA, 'trong_tai');
+  let topType = '', topV = 0;
+  Object.entries(byType).forEach(([t,v]) => { if (v > topV) { topType = t; topV = v; } });
+  document.getElementById('kpi-type').textContent = topType || '—';
+  document.getElementById('kpi-type-sub').textContent = topV ? `${fmt(topV)} lượt xe` : '';
+
+  // Date badge
+  const dates = getDates();
+  if (dates.length) {
+    const fmtD = d => { const p = d.split('-'); return `${p[2]}/${p[1]}`; };
+    document.getElementById('date-badge').textContent = `📅 ${fmtD(dates[0])} – ${fmtD(dates[dates.length-1])}`;
+  }
+}
+
+// ===== CHARTS =====
+function initCharts() {
+  // Disable datalabels globally — chỉ bật cho doughnut
+  Chart.defaults.plugins.datalabels = { display: false };
+  const dates = getDates();
+  // Populate date filter
+  const sel = document.getElementById('hourly-date');
+  sel.innerHTML = '<option value="">Tất cả ngày</option>' + dates.map(d => `<option value="${d}">${d}</option>`).join('');
+
+  // 1. Hourly stacked bar
+  charts.hourly = new Chart(document.getElementById('hourlyChart'), {
+    type:'bar', data:{labels:TIME_SLOTS,datasets:[
+      {label:'Nhập',data:Array(24).fill(0),backgroundColor:'rgba(242,101,34,0.75)',borderRadius:4,stack:'s'},
+      {label:'Xuất',data:Array(24).fill(0),backgroundColor:'rgba(0,70,127,0.75)',borderRadius:4,stack:'s'}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:TICK_COLOR,font:{size:11}}}},
+      scales:{x:{stacked:true,grid:{color:GRID_COLOR},ticks:{color:TICK_COLOR,font:{size:10},maxRotation:45}},
+              y:{stacked:true,grid:{color:GRID_COLOR},ticks:{color:TICK_COLOR}}}}
+  });
+
+  // 2. Vehicle doughnut
+  const doughnutOpts = {
+    responsive:true, maintainAspectRatio:false, cutout:'62%',
+    plugins:{
+      legend:{position:'bottom',labels:{color:TICK_COLOR,font:{size:11},padding:10}},
+      datalabels:{
+        color:'#fff', font:{weight:'bold',size:12},
+        formatter:(val,ctx)=>{
+          const total = ctx.chart.data.datasets[0].data.reduce((s,v)=>s+v,0);
+          const pct = total > 0 ? (val/total*100).toFixed(1) : 0;
+          return pct > 3 ? pct+'%' : '';
+        }
+      },
+      tooltip:{
+        callbacks:{
+          label: ctx => {
+            const total = ctx.chart.data.datasets[0].data.reduce((s,v)=>s+v,0);
+            const pct = total > 0 ? (ctx.raw/total*100).toFixed(1) : 0;
+            return `${ctx.label}: ${fmt(ctx.raw)} xe (${pct}%)`;
+          }
+        }
+      }
+    }
+  };
+  charts.vehicle = new Chart(document.getElementById('vehicleChart'), {
+    type:'doughnut', data:{labels:[],datasets:[{data:[],backgroundColor:['#F26522','#00467F','#10b981','#f59e0b','#ec4899','#8b5cf6','#06b6d4'],borderWidth:0}]},
+    options: doughnutOpts, plugins:[ChartDataLabels]
+  });
+
+  // 3. Daily trend line
+  charts.daily = new Chart(document.getElementById('dailyChart'), {
+    type:'line', data:{labels:dates,datasets:[
+      {label:'Nhập',data:[],borderColor:COLORS.accent,backgroundColor:'rgba(242,101,34,0.1)',fill:true,tension:.4,pointRadius:4,pointBackgroundColor:COLORS.accent,borderWidth:2},
+      {label:'Xuất',data:[],borderColor:COLORS.accent2,backgroundColor:'rgba(0,70,127,0.1)',fill:true,tension:.4,pointRadius:4,pointBackgroundColor:COLORS.accent2,borderWidth:2}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:TICK_COLOR,font:{size:11}}}},
+      scales:{x:{grid:{color:GRID_COLOR},ticks:{color:TICK_COLOR,font:{size:10}}},y:{grid:{color:GRID_COLOR},ticks:{color:TICK_COLOR}}}}
+  });
+
+  // 4. Lane type horizontal bar
+  charts.lane = new Chart(document.getElementById('laneChart'), {
+    type:'bar', data:{labels:[],datasets:[
+      {label:'Nhập',data:[],backgroundColor:'rgba(242,101,34,0.75)',borderRadius:6},
+      {label:'Xuất',data:[],backgroundColor:'rgba(0,70,127,0.75)',borderRadius:6}
+    ]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:TICK_COLOR,font:{size:11}}}},
+      scales:{x:{grid:{color:GRID_COLOR},ticks:{color:TICK_COLOR}},y:{grid:{color:GRID_COLOR},ticks:{color:TICK_COLOR,font:{size:12}}}}}
+  });
+
+  // Detail charts
+  charts.detailH = new Chart(document.getElementById('detailHourly'), {
+    type:'bar', data:{labels:TIME_SLOTS,datasets:[{label:'Số xe',data:Array(24).fill(0),backgroundColor:'rgba(242,101,34,0.7)',borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:GRID_COLOR},ticks:{color:TICK_COLOR,font:{size:10},maxRotation:45}},y:{grid:{color:GRID_COLOR},ticks:{color:TICK_COLOR}}}}
+  });
+  charts.detailV = new Chart(document.getElementById('detailVehicle'), {
+    type:'doughnut', data:{labels:[],datasets:[{data:[],backgroundColor:['#F26522','#00467F','#10b981','#f59e0b','#ec4899','#8b5cf6','#06b6d4'],borderWidth:0}]},
+    options:{
+      responsive:true, maintainAspectRatio:false, cutout:'62%',
+      plugins:{
+        legend:{position:'bottom',labels:{color:TICK_COLOR,font:{size:11},padding:10}},
+        datalabels:{
+          color:'#fff', font:{weight:'bold',size:12},
+          formatter:(val,ctx)=>{
+            const total = ctx.chart.data.datasets[0].data.reduce((s,v)=>s+v,0);
+            const pct = total > 0 ? (val/total*100).toFixed(1) : 0;
+            return pct > 3 ? pct+'%' : '';
+          }
+        },
+        tooltip:{
+          callbacks:{
+            label: ctx => {
+              const total = ctx.chart.data.datasets[0].data.reduce((s,v)=>s+v,0);
+              const pct = total > 0 ? (ctx.raw/total*100).toFixed(1) : 0;
+              return `${ctx.label}: ${fmt(ctx.raw)} xe (${pct}%)`;
+            }
+          }
+        }
+      }
+    }, plugins:[ChartDataLabels]
+  });
+
+  updateAllCharts();
+}
+
+function updateHourlyChart() {
+  const dateVal = document.getElementById('hourly-date').value;
+  const filtered = dateVal ? DATA.filter(r=>r.ngay===dateVal) : DATA;
+  const inH = {}, outH = {};
+  TIME_SLOTS.forEach(s => { inH[s]=0; outH[s]=0; });
+  filtered.forEach(r => {
+    if (r.phanloai === 'Nhập') inH[r.khung_gio] = (inH[r.khung_gio]||0) + r.slg_xe;
+    else outH[r.khung_gio] = (outH[r.khung_gio]||0) + r.slg_xe;
+  });
+  charts.hourly.data.datasets[0].data = TIME_SLOTS.map(s=>inH[s]||0);
+  charts.hourly.data.datasets[1].data = TIME_SLOTS.map(s=>outH[s]||0);
+  charts.hourly.update();
+}
+
+function updateAllCharts() {
+  updateHourlyChart();
+
+  // Vehicle doughnut
+  const byType = agg(DATA,'trong_tai');
+  const types = Object.keys(byType).sort();
+  charts.vehicle.data.labels = types;
+  charts.vehicle.data.datasets[0].data = types.map(t=>byType[t]);
+  charts.vehicle.update();
+
+  // Daily trend
+  const dates = getDates();
+  const inDaily = {}, outDaily = {};
+  dates.forEach(d => { inDaily[d]=0; outDaily[d]=0; });
+  DATA.forEach(r => { if (r.phanloai==='Nhập') inDaily[r.ngay]+=r.slg_xe; else outDaily[r.ngay]+=r.slg_xe; });
+  charts.daily.data.labels = dates;
+  charts.daily.data.datasets[0].data = dates.map(d=>inDaily[d]);
+  charts.daily.data.datasets[1].data = dates.map(d=>outDaily[d]);
+  charts.daily.update();
+
+  // Lane type
+  const lanes = [...new Set(DATA.map(r=>r.lane_type))].filter(Boolean);
+  const laneIn = {}, laneOut = {};
+  lanes.forEach(l => { laneIn[l]=0; laneOut[l]=0; });
+  DATA.forEach(r => { if (r.phanloai==='Nhập') laneIn[r.lane_type]+=r.slg_xe; else laneOut[r.lane_type]+=r.slg_xe; });
+  charts.lane.data.labels = lanes;
+  charts.lane.data.datasets[0].data = lanes.map(l=>laneIn[l]);
+  charts.lane.data.datasets[1].data = lanes.map(l=>laneOut[l]);
+  charts.lane.update();
+
+  // Populate filter dropdowns
+  const laneSelect = document.getElementById('chart-filter-lane');
+  laneSelect.innerHTML = '<option value="">Tất cả tuyến</option>' + lanes.map(l=>`<option value="${l}">${l}</option>`).join('');
+  const vehSelect = document.getElementById('chart-filter-vehicle');
+  const vehs = [...new Set(DATA.map(r=>r.trong_tai))].filter(Boolean).sort();
+  vehSelect.innerHTML = '<option value="">Tất cả trọng tải</option>' + vehs.map(v=>`<option value="${v}">${v}</option>`).join('');
+
+  updateDetailCharts();
+  updateAlerts();
+  renderDailyComparison();
+  renderHeatmap();
+  initLaneDayChart();
+  initVehHourCompare();
+  initMultiDayChart();
+
+  // Populate phanloai dropdowns dynamically from data
+  const phanloaiVals = [...new Set(DATA.map(r=>r.phanloai))].filter(Boolean).sort();
+  const plOptions = phanloaiVals.map(v => `<option value="${v}">Chỉ ${v}</option>`).join('');
+  const plOptions2 = phanloaiVals.map(v => `<option value="${v}">${v}</option>`).join('');
+  document.getElementById('heatmap-type').innerHTML = '<option value="">Tất cả (Nhập+Xuất)</option>' + plOptions;
+  document.getElementById('lane-day-type').innerHTML = '<option value="">Nhập + Xuất</option>' + plOptions;
+  document.getElementById('chart-filter-type').innerHTML = '<option value="">Tất cả loại</option>' + plOptions2;
+}
+
+// ===== DETAIL CHARTS =====
+function updateDetailCharts() {
+  let filtered = [...DATA];
+  const ft = document.getElementById('chart-filter-type').value;
+  const fl = document.getElementById('chart-filter-lane').value;
+  const fv = document.getElementById('chart-filter-vehicle').value;
+  if (ft) filtered = filtered.filter(r=>r.phanloai===ft);
+  if (fl) filtered = filtered.filter(r=>r.lane_type===fl);
+  if (fv) filtered = filtered.filter(r=>r.trong_tai===fv);
+
+  // Hourly
+  const hData = {};
+  TIME_SLOTS.forEach(s => hData[s]=0);
+  filtered.forEach(r => hData[r.khung_gio] = (hData[r.khung_gio]||0)+r.slg_xe);
+  charts.detailH.data.datasets[0].data = TIME_SLOTS.map(s=>hData[s]||0);
+  charts.detailH.update();
+
+  // Vehicle
+  const vData = agg(filtered,'trong_tai');
+  const vKeys = Object.keys(vData).sort();
+  charts.detailV.data.labels = vKeys;
+  charts.detailV.data.datasets[0].data = vKeys.map(k=>vData[k]);
+  charts.detailV.update();
+
+  // Route table
+  const routes = {};
+  filtered.forEach(r => {
+    const key = r.lo_trinh+'|'+r.phanloai+'|'+r.lane_type+'|'+r.trong_tai;
+    if (!routes[key]) routes[key] = {lo_trinh:r.lo_trinh,phanloai:r.phanloai,lane:r.lane_type,trong_tai:r.trong_tai,total:0};
+    routes[key].total += r.slg_xe;
+  });
+  const sorted = Object.values(routes).sort((a,b)=>b.total-a.total).slice(0,20);
+  document.getElementById('route-table').innerHTML = sorted.map((r,i) =>
+    `<tr><td>${i+1}</td><td>${r.lo_trinh}</td><td>${r.phanloai}</td><td>${r.lane}</td><td>${r.trong_tai}</td><td><strong>${fmt(r.total)}</strong></td></tr>`
+  ).join('') || '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text2)">Không có dữ liệu</td></tr>';
+}
+
+// ===== DAILY COMPARISON TABLE =====
+function renderDailyComparison() {
+  const dates = getDates().reverse(); // Ngày mới nhất lên trước
+  const hasProd = PROD_DATA.length > 0;
+
+  // Tính TB xe và TB kg theo ngày
+  const allDates = getDates();
+  const allTotals = allDates.map(d => DATA.filter(r=>r.ngay===d).reduce((s,r)=>s+r.slg_xe,0));
+  const avgXe = allTotals.reduce((s,v)=>s+v,0) / allDates.length;
+
+  let avgKg = 0;
+  if (hasProd) {
+    const allKgs = allDates.map(d => {
+      const p = PROD_DATA.filter(r=>r.ngay===d);
+      return p.reduce((s,r)=>s+r.kgs_nhap+r.kgs_export,0);
+    });
+    avgKg = allKgs.reduce((s,v)=>s+v,0) / allDates.length;
+  } else {
+    const WEIGHT_MAP = {'1.9T':1.9,'5T':5,'6.5T':6.5,'8T':8,'15T':15};
+    const allKgs = allDates.map(d => DATA.filter(r=>r.ngay===d).reduce((s,r)=>s+r.slg_xe*(WEIGHT_MAP[r.trong_tai]||5),0));
+    avgKg = allKgs.reduce((s,v)=>s+v,0) / allDates.length;
+  }
+
+  let html = '';
+  dates.forEach((d, idx) => {
+    const dayData = DATA.filter(r => r.ngay === d);
+    const inV = dayData.filter(r=>r.phanloai==='Nhập').reduce((s,r)=>s+r.slg_xe,0);
+    const outV = dayData.filter(r=>r.phanloai==='Xuất').reduce((s,r)=>s+r.slg_xe,0);
+    const total = inV + outV;
+
+    // KG thực tế hoặc ước tính
+    let dayKg = 0;
+    if (hasProd) {
+      const prod = PROD_DATA.filter(r=>r.ngay===d);
+      dayKg = prod.reduce((s,r)=>s+r.kgs_nhap+r.kgs_export,0);
+    } else {
+      const WEIGHT_MAP = {'1.9T':1.9,'5T':5,'6.5T':6.5,'8T':8,'15T':15};
+      dayKg = dayData.reduce((s,r)=>s+r.slg_xe*(WEIGHT_MAP[r.trong_tai]||5),0);
+    }
+
+    // Peak hour
+    const hourly = {};
+    dayData.forEach(r => { hourly[r.khung_gio] = (hourly[r.khung_gio]||0) + r.slg_xe; });
+    let peakH = '-', peakV = 0;
+    Object.entries(hourly).forEach(([h,v]) => { if (v > peakV) { peakH = h.split('--')[0]+'h'; peakV = v; } });
+
+    // Top vehicle
+    const veh = {};
+    dayData.forEach(r => { veh[r.trong_tai] = (veh[r.trong_tai]||0) + r.slg_xe; });
+    let topVeh = '-', topVehV = 0;
+    Object.entries(veh).forEach(([t,v]) => { if (v > topVehV) { topVeh = t; topVehV = v; } });
+
+    // Trend Xe: so với TB
+    let trendXe = '';
+    if (avgXe > 0) {
+      const pctXe = ((total - avgXe) / avgXe * 100).toFixed(1);
+      trendXe = pctXe >= 0 ? `<span class="trend-up">▲ +${pctXe}%</span>` : `<span class="trend-down">▼ ${pctXe}%</span>`;
+    }
+
+    // Trend KG: so với TB
+    let trendKg = '';
+    if (avgKg > 0) {
+      const pctKg = ((dayKg - avgKg) / avgKg * 100).toFixed(1);
+      trendKg = pctKg >= 0 ? `<span class="trend-up">▲ +${pctKg}%</span>` : `<span class="trend-down">▼ ${pctKg}%</span>`;
+    }
+
+    const fmtD = d.split('-').slice(1).reverse().join('/');
+    const kgDisplay = hasProd ? (dayKg/1000).toFixed(1) : dayKg.toFixed(1);
+    html += `<tr><td><strong>${fmtD}</strong></td><td>${fmt(inV)}</td><td>${fmt(outV)}</td><td><strong>${fmt(total)}</strong></td><td>${kgDisplay}</td><td>${peakH} <span style="color:var(--text2)">(${peakV} xe)</span></td><td>${topVeh} <span style="color:var(--text2)">(${topVehV})</span></td><td>${trendXe}</td><td>${trendKg}</td></tr>`;
+  });
+  document.getElementById('compare-daily').innerHTML = html;
+}
+
+// ===== HEATMAP =====
+function renderHeatmap() {
+  const filterType = document.getElementById('heatmap-type').value;
+  const dates = getDates().reverse(); // Ngày mới nhất lên trước
+  const filtered = filterType ? DATA.filter(r=>r.phanloai===filterType) : DATA;
+  // Build matrix: dates x hours
+  const matrix = {};
+  let maxVal = 0;
+  dates.forEach(d => {
+    matrix[d] = {};
+    TIME_SLOTS.forEach(s => matrix[d][s] = 0);
+  });
+  filtered.forEach(r => {
+    if (matrix[r.ngay]) { matrix[r.ngay][r.khung_gio] = (matrix[r.ngay][r.khung_gio]||0) + r.slg_xe; }
+  });
+  dates.forEach(d => TIME_SLOTS.forEach(s => { if (matrix[d][s] > maxVal) maxVal = matrix[d][s]; }));
+  // Render
+  let html = '<thead><tr><th>Ngày \\ Giờ</th>';
+  TIME_SLOTS.forEach(s => html += `<th>${s.split('--')[0]}h</th>`);
+  html += '</tr></thead><tbody>';
+  dates.forEach(d => {
+    const fmtD = d.split('-').slice(1).reverse().join('/');
+    html += `<tr><td style="text-align:left;font-weight:600;white-space:nowrap">${fmtD}</td>`;
+    TIME_SLOTS.forEach(s => {
+      const v = matrix[d][s] || 0;
+      const intensity = maxVal > 0 ? v / maxVal : 0;
+      let bg, color;
+      if (v === 0) { bg = 'transparent'; color = 'var(--text2)'; }
+      else if (intensity < 0.3) { bg = 'rgba(0,206,201,' + (0.2 + intensity * 0.4) + ')'; color = '#1f2937'; }
+      else if (intensity < 0.6) { bg = 'rgba(253,203,110,' + (0.3 + intensity * 0.5) + ')'; color = '#1f2937'; }
+      else { bg = 'rgba(255,118,117,' + (0.5 + intensity * 0.5) + ')'; color = '#fff'; }
+      html += `<td style="background:${bg};color:${color};font-weight:500">${v || ''}</td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody>';
+  document.getElementById('heatmap-table').innerHTML = html;
+}
+
+// ===== LANE DAY CHART (Tỷ trọng xe theo tuyến theo ngày) =====
+function initLaneDayChart() {
+  const dates = getDates();
+  const lanes = [...new Set(DATA.map(r=>r.lane_type))].filter(Boolean);
+  const laneColors = {'Nội Thành':'#F26522','Nội Vùng':'#00467F','Liên Vùng':'#10b981'};
+  charts.laneDay = new Chart(document.getElementById('laneDayChart'), {
+    type:'bar',
+    data:{labels:dates.map(d=>d.split('-').slice(1).reverse().join('/')),datasets:lanes.map(l=>({
+      label:l, data:[], backgroundColor:laneColors[l]||'#636e72', borderRadius:4, stack:'s'
+    }))},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:TICK_COLOR,font:{size:11}}},
+      tooltip:{callbacks:{label:ctx=>{const total=ctx.chart.data.datasets.reduce((s,ds)=>s+(ds.data[ctx.dataIndex]||0),0);const pct=total?((ctx.raw/total)*100).toFixed(1):0;return `${ctx.dataset.label}: ${ctx.raw} xe (${pct}%)`;}}}},
+      scales:{x:{stacked:true,grid:{color:GRID_COLOR},ticks:{color:TICK_COLOR,font:{size:10}}},y:{stacked:true,grid:{color:GRID_COLOR},ticks:{color:TICK_COLOR}}}}
+  });
+  updateLaneDayChart();
+}
+
+function updateLaneDayChart() {
+  const filterType = document.getElementById('lane-day-type').value;
+  const dates = getDates();
+  const lanes = [...new Set(DATA.map(r=>r.lane_type))].filter(Boolean);
+  const filtered = filterType ? DATA.filter(r=>r.phanloai===filterType) : DATA;
+  lanes.forEach((l,i) => {
+    charts.laneDay.data.datasets[i].data = dates.map(d => {
+      return filtered.filter(r=>r.ngay===d && r.lane_type===l).reduce((s,r)=>s+r.slg_xe,0);
+    });
+  });
+  charts.laneDay.update();
+}
+
+// ===== VEHICLE HOUR COMPARE (So sánh loại xe theo giờ giữa 2 ngày) =====
+function initVehHourCompare() {
+  const dates = getDates();
+  const sel1 = document.getElementById('veh-hour-day1');
+  const sel2 = document.getElementById('veh-hour-day2');
+  sel1.innerHTML = dates.map((d,i) => `<option value="${d}" ${i===dates.length-1?'selected':''}>${d.split('-').slice(1).reverse().join('/')}</option>`).join('');
+  sel2.innerHTML = dates.map((d,i) => `<option value="${d}" ${i===dates.length-2?'selected':''}>${d.split('-').slice(1).reverse().join('/')}</option>`).join('');
+  const vehs = [...new Set(DATA.map(r=>r.trong_tai))].filter(Boolean).sort();
+  const vehColors = {'1.9T':'#F26522','5T':'#00467F','6.5T':'#10b981','8T':'#f59e0b','15T':'#ec4899'};
+  const datasets = [];
+  vehs.forEach(v => {
+    datasets.push({label:v+' (Ngày 1)',data:Array(24).fill(0),backgroundColor:vehColors[v]||'#636e72',borderRadius:3,stack:'day1'});
+    datasets.push({label:v+' (Ngày 2)',data:Array(24).fill(0),backgroundColor:(vehColors[v]||'#636e72')+'66',borderRadius:3,stack:'day2',borderWidth:2,borderColor:vehColors[v]||'#636e72'});
+  });
+  charts.vehHour = new Chart(document.getElementById('vehHourCompare'), {
+    type:'bar', data:{labels:TIME_SLOTS,datasets},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:TICK_COLOR,font:{size:10}}}},
+      scales:{x:{stacked:true,grid:{color:GRID_COLOR},ticks:{color:TICK_COLOR,font:{size:9},maxRotation:45}},y:{stacked:true,grid:{color:GRID_COLOR},ticks:{color:TICK_COLOR}}}}
+  });
+  updateVehHourCompare();
+}
+
+function updateVehHourCompare() {
+  const d1 = document.getElementById('veh-hour-day1').value;
+  const d2 = document.getElementById('veh-hour-day2').value;
+  const vehs = [...new Set(DATA.map(r=>r.trong_tai))].filter(Boolean).sort();
+  vehs.forEach((v,i) => {
+    const data1 = DATA.filter(r=>r.ngay===d1 && r.trong_tai===v);
+    const data2 = DATA.filter(r=>r.ngay===d2 && r.trong_tai===v);
+    charts.vehHour.data.datasets[i*2].data = TIME_SLOTS.map(s => data1.filter(r=>r.khung_gio===s).reduce((sum,r)=>sum+r.slg_xe,0));
+    charts.vehHour.data.datasets[i*2+1].data = TIME_SLOTS.map(s => data2.filter(r=>r.khung_gio===s).reduce((sum,r)=>sum+r.slg_xe,0));
+    const fD1 = d1.split('-').slice(1).reverse().join('/');
+    const fD2 = d2.split('-').slice(1).reverse().join('/');
+    charts.vehHour.data.datasets[i*2].label = v+' ('+fD1+')';
+    charts.vehHour.data.datasets[i*2+1].label = v+' ('+fD2+')';
+  });
+  charts.vehHour.update();
+}
+
+// ===== MULTI-DAY HOURLY OVERLAY =====
+function initMultiDayChart() {
+  const lineColors = ['#6c5ce7','#00cec9','#00b894','#fdcb6e','#ff7675','#fd79a8','#636e72','#a29bfe','#81ecec','#fab1a0'];
+  charts.multiDay = new Chart(document.getElementById('multiDayChart'), {
+    type:'line', data:{labels:TIME_SLOTS,datasets:[]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:TICK_COLOR,font:{size:10}}}},
+      scales:{x:{grid:{color:GRID_COLOR},ticks:{color:TICK_COLOR,font:{size:9},maxRotation:45}},y:{grid:{color:GRID_COLOR},ticks:{color:TICK_COLOR}}}}
+  });
+  updateMultiDayChart();
+}
+
+function updateMultiDayChart() {
+  const lineColors = ['#6c5ce7','#00cec9','#00b894','#fdcb6e','#ff7675','#fd79a8','#636e72','#a29bfe','#81ecec','#fab1a0'];
+  const count = parseInt(document.getElementById('multi-day-count').value);
+  const allDates = getDates();
+  const dates = count > 0 ? allDates.slice(-count) : allDates;
+  charts.multiDay.data.datasets = dates.map((d,i) => {
+    const dayData = DATA.filter(r=>r.ngay===d);
+    return {
+      label: d.split('-').slice(1).reverse().join('/'),
+      data: TIME_SLOTS.map(s => dayData.filter(r=>r.khung_gio===s).reduce((sum,r)=>sum+r.slg_xe,0)),
+      borderColor: lineColors[i % lineColors.length],
+      backgroundColor: 'transparent',
+      tension: 0.3, pointRadius: 3, borderWidth: 2,
+      pointBackgroundColor: lineColors[i % lineColors.length]
+    };
+  });
+  charts.multiDay.update();
+}
+
+// ===== ALERTS (So sánh với Trung bình + Đơn Nhập/Xuất + KG thực tế + Giờ cao điểm) =====
+function estWeight(r) { return r.slg_xe * (VEHICLE_CAPS[r.trong_tai] || 5); }
+
+// Lấy tổng kg + sản lượng thực tế theo ngày
+function getProdByDate(date) {
+  const dayProd = PROD_DATA.filter(r => r.ngay === date);
+  return {
+    sl_nhap: dayProd.reduce((s,r) => s + r.san_luong_nhap, 0),
+    kgs_nhap: dayProd.reduce((s,r) => s + r.kgs_nhap, 0),
+    sl_export: dayProd.reduce((s,r) => s + r.san_luong_export, 0),
+    kgs_export: dayProd.reduce((s,r) => s + r.kgs_export, 0),
+    sl_pack: dayProd.reduce((s,r) => s + r.san_luong_pack, 0),
+    kgs_pack: dayProd.reduce((s,r) => s + r.kgs_pack, 0)
+  };
+}
+
+function updateAlerts() {
+  const alerts = [];
+  let hourlyWarn = 0, dailyWarn = 0;
+  const dates = getDates();
+  const numDays = dates.length;
+  if (numDays === 0) return;
+
+  // === KPI tổng quan (dùng dữ liệu thực tế từ sheet sản lượng nếu có) ===
+  const totalIn = DATA.filter(r=>r.phanloai==='Nhập').reduce((s,r)=>s+r.slg_xe,0);
+  const totalOut = DATA.filter(r=>r.phanloai==='Xuất').reduce((s,r)=>s+r.slg_xe,0);
+  const hasProd = PROD_DATA.length > 0;
+  const totalKgNhap = hasProd ? PROD_DATA.reduce((s,r)=>s+r.kgs_nhap,0) : DATA.reduce((s,r)=>s+estWeight(r),0);
+  const totalKgXuat = hasProd ? PROD_DATA.reduce((s,r)=>s+r.kgs_export,0) : 0;
+  const totalKg = hasProd ? (totalKgNhap + totalKgXuat) : DATA.reduce((s,r)=>s+estWeight(r),0);
+  const totalSlNhap = hasProd ? PROD_DATA.reduce((s,r)=>s+r.san_luong_nhap,0) : totalIn;
+  const totalSlXuat = hasProd ? PROD_DATA.reduce((s,r)=>s+r.san_luong_export,0) : totalOut;
+  document.getElementById('alert-total-in').textContent = fmt(totalIn) + (hasProd ? ` (${fmt(totalSlNhap)} đơn)` : '');
+  document.getElementById('alert-total-out').textContent = fmt(totalOut) + (hasProd ? ` (${fmt(totalSlXuat)} đơn)` : '');
+  document.getElementById('alert-total-kg').textContent = hasProd ? `${(totalKgNhap/1000).toFixed(1)} / ${(totalKgXuat/1000).toFixed(1)}` : (totalKg).toFixed(1);
+  document.getElementById('alert-avg-kg').textContent = (totalKg/1000/numDays).toFixed(1);
+
+  // === 1. Tính TB theo từng khung giờ ===
+  const hourlyStats = {}; // {slot: {total, inV, outV, kg, max, maxDate, days}}
+  TIME_SLOTS.forEach(s => hourlyStats[s] = {total:0, inV:0, outV:0, kg:0, max:0, maxDate:'', perDay:{}});
+  dates.forEach(date => {
+    const dayData = DATA.filter(r => r.ngay === date);
+    dayData.forEach(r => {
+      const st = hourlyStats[r.khung_gio];
+      if (!st) return;
+      st.total += r.slg_xe;
+      st.kg += estWeight(r);
+      if (r.phanloai==='Nhập') st.inV += r.slg_xe; else st.outV += r.slg_xe;
+      st.perDay[date] = (st.perDay[date]||0) + r.slg_xe;
+    });
+  });
+  // Tính max và TB
+  TIME_SLOTS.forEach(s => {
+    const st = hourlyStats[s];
+    Object.entries(st.perDay).forEach(([d,v]) => {
+      if (v > st.max) { st.max = v; st.maxDate = d; }
+    });
+    st.avg = st.total / numDays;
+    st.avgIn = st.inV / numDays;
+    st.avgOut = st.outV / numDays;
+    st.avgKg = st.kg / numDays;
+  });
+
+  // === 2. Bảng khung giờ cao điểm (top giờ có TB xe > 0, sắp xếp giảm dần) ===
+  const peakSlots = TIME_SLOTS.filter(s => hourlyStats[s].avg > 0)
+    .sort((a,b) => hourlyStats[b].avg - hourlyStats[a].avg);
+  const topAvg = peakSlots.length > 0 ? hourlyStats[peakSlots[0]].avg : 1;
+  document.getElementById('peak-hour-table').innerHTML = peakSlots.map(s => {
+    const st = hourlyStats[s];
+    const intensity = st.avg / topAvg;
+    let badge, badgeClass;
+    if (intensity >= 0.7) { badge = '🔴 Rất cao'; badgeClass = 'color:var(--red)'; }
+    else if (intensity >= 0.4) { badge = '🟡 Trung bình'; badgeClass = 'color:var(--orange)'; }
+    else { badge = '🟢 Thấp'; badgeClass = 'color:var(--green)'; }
+    const maxD = st.maxDate ? st.maxDate.split('-').slice(1).reverse().join('/') : '-';
+    return `<tr>
+      <td><strong>${s.split('--')[0]}h</strong></td>
+      <td>${st.avg.toFixed(1)}</td>
+      <td style="color:var(--accent)">${st.avgIn.toFixed(1)}</td>
+      <td style="color:var(--accent2)">${st.avgOut.toFixed(1)}</td>
+      <td>${st.avgKg.toFixed(1)}</td>
+      <td><strong>${st.max}</strong></td>
+      <td>${maxD}</td>
+      <td style="${badgeClass};font-weight:600">${badge}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text2)">Không có dữ liệu</td></tr>';
+
+  // === 3. Cảnh báo giờ: vượt >30% TB của chính khung giờ đó ===
+  const HOURLY_THRESHOLD = 0.3;
+  dates.forEach(date => {
+    const dayData = DATA.filter(r => r.ngay === date);
+    const hourly = {}, hourlyIn = {}, hourlyOut = {}, hourlyKg = {};
+    dayData.forEach(r => {
+      hourly[r.khung_gio] = (hourly[r.khung_gio]||0) + r.slg_xe;
+      hourlyKg[r.khung_gio] = (hourlyKg[r.khung_gio]||0) + estWeight(r);
+      if (r.phanloai==='Nhập') hourlyIn[r.khung_gio] = (hourlyIn[r.khung_gio]||0) + r.slg_xe;
+      else hourlyOut[r.khung_gio] = (hourlyOut[r.khung_gio]||0) + r.slg_xe;
+    });
+    Object.entries(hourly).forEach(([h, v]) => {
+      const avg = hourlyStats[h] ? hourlyStats[h].avg : 0;
+      if (avg > 0 && v > avg * (1 + HOURLY_THRESHOLD)) {
+        const pct = ((v - avg) / avg * 100).toFixed(0);
+        hourlyWarn++;
+        const fmtD = date.split('-').slice(1).reverse().join('/');
+        const inV = hourlyIn[h]||0, outV = hourlyOut[h]||0;
+        const prodInfo = getRealKg(date, h);
+        let kgText = '';
+        if (prodInfo) {
+          kgText = `${(prodInfo.kgs_nhap/1000).toFixed(1)}T nhập / ${(prodInfo.kgs_export/1000).toFixed(1)}T xuất · SL: ${prodInfo.sl_nhap} nhập / ${prodInfo.sl_export} xuất`;
+        } else {
+          kgText = `${((hourlyKg[h]||0)).toFixed(1)} tấn (ước tính)`;
+        }
+        alerts.push({type:'danger', text:`⚠️ ${fmtD} khung ${h}: <strong>${v} xe</strong> (Nhập ${inV} / Xuất ${outV}) · ${kgText} — vượt ${pct}% so với TB ${avg.toFixed(1)} xe`});
+      }
+    });
+  });
+
+  // === 4. Cảnh báo ngày: vượt >20% TB chung ===
+  const DAILY_THRESHOLD = 0.2;
+  const dailyTotals = dates.map(d => DATA.filter(r => r.ngay === d).reduce((s,r) => s + r.slg_xe, 0));
+  const dailyAvg = dailyTotals.reduce((s,v) => s + v, 0) / numDays;
+  dates.forEach((date, idx) => {
+    const total = dailyTotals[idx];
+    if (total > dailyAvg * (1 + DAILY_THRESHOLD)) {
+      const pct = ((total - dailyAvg) / dailyAvg * 100).toFixed(0);
+      dailyWarn++;
+      const fmtD = date.split('-').slice(1).reverse().join('/');
+      const dayData = DATA.filter(r => r.ngay === date);
+      const inV = dayData.filter(r=>r.phanloai==='Nhập').reduce((s,r)=>s+r.slg_xe,0);
+      const outV = dayData.filter(r=>r.phanloai==='Xuất').reduce((s,r)=>s+r.slg_xe,0);
+      const prod = hasProd ? getProdByDate(date) : null;
+      let kgText = '';
+      if (prod) {
+        kgText = `${(prod.kgs_nhap/1000).toFixed(1)}T nhập / ${(prod.kgs_export/1000).toFixed(1)}T xuất · SL: ${fmt(prod.sl_nhap)} / ${fmt(prod.sl_export)} đơn`;
+      } else {
+        kgText = `${dayData.reduce((s,r)=>s+estWeight(r),0).toFixed(1)} tấn (ước tính)`;
+      }
+      alerts.push({type:'warning', text:`📅 ${fmtD}: <strong>${total} xe</strong> (Nhập ${inV} / Xuất ${outV}) · ${kgText} — vượt ${pct}% so với TB ${dailyAvg.toFixed(1)} xe/ngày`});
+    }
+  });
+
+  const safeCount = dates.length - dailyWarn;
+  document.getElementById('alert-hourly-count').textContent = hourlyWarn;
+  document.getElementById('alert-daily-count').textContent = dailyWarn;
+  document.getElementById('alert-safe-count').textContent = Math.max(0, safeCount);
+
+  alerts.sort((a,b) => a.type==='danger' ? -1 : 1);
+  document.getElementById('alert-list').innerHTML = alerts.length
+    ? `<div style="padding:10px 14px;margin-bottom:10px;font-size:12px;color:var(--text2);background:var(--card2);border-radius:8px;line-height:1.6">
+        📊 <strong>Ngưỡng cảnh báo:</strong> Giờ > TB +30% | Ngày > TB +20%<br>
+        📈 TB ngày: ${dailyAvg.toFixed(1)} xe · TB kg/ngày: ${(totalKg/numDays).toFixed(1)} tấn
+      </div>`
+      + alerts.map(a => `<div class="alert-item ${a.type}"><span class="alert-icon">${a.type==='danger'?'🔴':'🟡'}</span>${a.text}</div>`).join('')
+    : '<div style="text-align:center;padding:32px;color:var(--green)">✅ Không có cảnh báo nào. Hoạt động bình thường!</div>';
+}
+
+// ===== DATA LOADING =====
+async function loadData() {
+  try {
+    // Fetch cả 2 sheet song song
+    const [truckRes, prodRes] = await Promise.allSettled([
+      fetch(CSV_URL).then(r => r.ok ? r.text() : Promise.reject('truck')),
+      fetch(PROD_URL).then(r => r.ok ? r.text() : Promise.reject('prod'))
+    ]);
+    if (truckRes.status === 'fulfilled') {
+      DATA = parseCSV(truckRes.value);
+    }
+    if (prodRes.status === 'fulfilled') {
+      PROD_DATA = parseProdCSV(prodRes.value);
+      console.log('Sản lượng loaded:', PROD_DATA.length, 'rows');
+    }
+    if (DATA.length === 0) throw new Error('No valid truck data');
+    startApp();
+  } catch(e) {
+    console.warn('Fetch failed:', e.message, '— showing upload UI');
+    document.getElementById('loading').innerHTML = `
+      <div style="text-align:center;max-width:480px">
+        <div style="font-size:48px;margin-bottom:16px">📁</div>
+        <h2 style="color:var(--text);margin-bottom:8px">Tải dữ liệu CSV</h2>
+        <p style="color:var(--text2);margin-bottom:24px;font-size:14px">Không thể tải dữ liệu từ Google Sheet. Vui lòng chọn file CSV.</p>
+        <label class="upload-btn" style="font-size:15px;padding:14px 32px;display:inline-block">
+          📁 Chọn file CSV
+          <input type="file" accept=".csv" style="display:none" onchange="handleUpload(event)">
+        </label>
+      </div>`;
+  }
+}
+
+function handleUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    DATA = parseCSV(ev.target.result);
+    if (DATA.length === 0) { alert('File CSV không hợp lệ hoặc không có dữ liệu.'); return; }
+    startApp();
+  };
+  reader.readAsText(file);
+}
+
+function startApp() {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('app').style.display = '';
+  updateKPIs();
+  initCharts();
+
+}
+
+// File input in header
+document.getElementById('file-input').addEventListener('change', function(e) {
+  handleUpload(e);
+});
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded', loadData);
+</script>
+</body>
+</html>
