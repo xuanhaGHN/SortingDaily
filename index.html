@@ -354,25 +354,152 @@ function parseCSV(text) {
   const lines = text.trim().split('\n');
   if (lines.length < 2) return [];
   const headers = parseCSVLine(lines[0]).map(h => h.trim().replace(/^"|"$/g,''));
+  
+  // Auto-detect format
+  const isRawFormat = headers.includes('dt') && headers.includes('gio_hieu_chinh');
+  
   const rows = [];
-  for (let i = 1; i < lines.length; i++) {
-    const vals = parseCSVLine(lines[i]);
-    if (vals.length < 8) continue;
-    const obj = {};
-    for (let j = 0; j < 8; j++) {
-      if (headers[j]) obj[headers[j]] = (vals[j]||'').replace(/^"|"$/g,'').trim();
+  if (isRawFormat) {
+    const tempAgg = {};
+    const lienVungKws = [
+      'hồ chí minh', 'hcm', 'bình dương', 'đồng nai', 'đnai', 'bình thuận', 'bình phước',
+      'cần thơ', 'đà nẵng', 'quảng bình', 'nghệ an', 'thanh hoá', 'thanh hóa',
+      'thừa thiên huế', 'huế', 'khánh hòa', 'khánh hoà', 'bình định', 'gia lai',
+      'đắk lắk', 'quảng trị', 'lâm đồng', 'lđ', 'vinh', 'nha trang', 'đồng tháp',
+      'an giang', 'kiên giang', 'cà mau', 'đà lạt', 'vũng tàu', 'bà rịa', 'tây ninh',
+      'quảng nam', 'quảng ngãi', 'phú yên', 'ninh thuận', 'kon tum', 'đắk nông',
+      'long an', 'tiền giang', 'bến tre', 'trà vinh', 'vĩnh long', 'hậu giang',
+      'sóc trăng', 'bạc liêu', 'bđ'
+    ];
+    const noiVungKws = [
+      'hưng yên', 'hy', 'phú thọ', 'bắc ninh', 'bn', 'bắc giang', 'bg', 'hải phòng', 'hp',
+      'sơn la', 'sl', 'yên bái', 'yb', 'lào cai', 'lc', 'vĩnh phúc', 'vp', 'tuyên quang', 'tq',
+      'quảng ninh', 'qn', 'lạng sơn', 'ls', 'hòa bình', 'hb', 'thái nguyên', 'tn', 'cao bằng',
+      'hà giang', 'lai châu', 'điện biên', 'bắc kạn', 'hà nam', 'thái bình', 'nam định',
+      'ninh bình', 'hải dương', 'hd'
+    ];
+    
+    function cleanStop(name) {
+      if (!name || name === '0' || name === '-1') return '';
+      let cleaned = name.replace(/Kho Trung Chuyển\s+/gi, '')
+                        .replace(/Kho Chuyển Tiếp\s+/gi, '')
+                        .replace(/Bưu cục\s+/gi, '')
+                        .replace(/Bưu Cục\s+/gi, '')
+                        .replace(/Kho Giao Hàng Nặng\s*-\s*/gi, '');
+      const parts = cleaned.split('-');
+      if (parts.length > 0) cleaned = parts[0];
+      return cleaned.trim();
     }
-    const slg = parseInt(obj['Slg_xe'] || obj['Slg xe'] || '0');
-    if (isNaN(slg) || slg <= 0) continue;
-    let pl = (obj['phanloai']||'').normalize('NFC').trim();
-    if (/nh[aậ]p/i.test(pl)) pl = 'Nhập';
-    else if (/xu[aấ]t/i.test(pl)) pl = 'Xuất';
-    rows.push({
-      ngay: obj['ngay']||'', stoppoint: obj['stoppoint_name']||'',
-      khung_gio: obj['khung_gio']||'', phanloai: pl,
-      trong_tai: obj['trong_tai']||'', lane_type: obj['lane_type']||'',
-      lo_trinh: obj['lo_trinh']||'', slg_xe: slg
+    
+    for (let i = 1; i < lines.length; i++) {
+      const vals = parseCSVLine(lines[i]);
+      if (vals.length < headers.length) continue;
+      const obj = {};
+      headers.forEach((h, j) => {
+        obj[h] = (vals[j] || '').replace(/^"|"$/g, '').trim();
+      });
+      
+      const dt = obj['dt'] || '';
+      if (!dt) continue;
+      
+      const stoppoint = obj['stoppoint_name'] || '';
+      
+      let hour = 0;
+      const gio = obj['gio_hieu_chinh'] || '';
+      if (gio) {
+        const p = gio.split(':');
+        if (p.length > 0) {
+          hour = parseInt(p[0]) || 0;
+        }
+      }
+      const khung_gio = `${hour}--${hour+1}`;
+      
+      let pl = (obj['phanloai'] || '').normalize('NFC').trim();
+      if (/nh[aậ]p/i.test(pl)) pl = 'Nhập';
+      else if (/xu[aấ]t/i.test(pl)) pl = 'Xuất';
+      else continue;
+      
+      let trong_tai = obj['trong_tai'] || '';
+      try {
+        const val = parseInt(trong_tai);
+        if (val === 1900 || val === 2000) trong_tai = '1.9T';
+        else if (val === 5000) trong_tai = '5T';
+        else if (val === 6500) trong_tai = '6.5T';
+        else if (val === 8000) trong_tai = '8T';
+        else if (val === 15000) trong_tai = '15T';
+        else if (!isNaN(val)) trong_tai = `${Math.round(val / 1000 * 10) / 10}T`;
+      } catch (e) {}
+      
+      const checkText = `${obj['scheduler_name'] || ''} ${obj['next_stop_name'] || ''} ${obj['return_stop'] || ''}`.toLowerCase();
+      let lane_type = 'Nội Thành';
+      for (const kw of lienVungKws) {
+        if (checkText.includes(kw)) {
+          lane_type = 'Liên Vùng';
+          break;
+        }
+      }
+      if (lane_type === 'Nội Thành') {
+        for (const kw of noiVungKws) {
+          if (checkText.includes(kw)) {
+            lane_type = 'Nội Vùng';
+            break;
+          }
+        }
+      }
+      
+      let lo_trinh = '';
+      const spClean = cleanStop(stoppoint);
+      if (pl === 'Nhập') {
+        let orig = obj['scheduler_name'] || obj['return_stop'] || 'Bưu cục';
+        orig = cleanStop(orig);
+        if (!orig) orig = 'Bưu cục';
+        lo_trinh = `${orig} -> ${spClean}`;
+      } else {
+        let dest = obj['next_stop_name'] || obj['scheduler_name'] || 'Bưu cục';
+        dest = cleanStop(dest);
+        if (!dest) dest = 'Bưu cục';
+        lo_trinh = `${spClean} -> ${dest}`;
+      }
+      
+      const key = `${dt}|${stoppoint}|${khung_gio}|${pl}|${trong_tai}|${lane_type}|${lo_trinh}`;
+      if (!tempAgg[key]) {
+        tempAgg[key] = {
+          ngay: dt,
+          stoppoint: stoppoint,
+          khung_gio: khung_gio,
+          phanloai: pl,
+          trong_tai: trong_tai,
+          lane_type: lane_type,
+          lo_trinh: lo_trinh,
+          slg_xe: 0
+        };
+      }
+      tempAgg[key].slg_xe += 1;
+    }
+    
+    Object.keys(tempAgg).forEach(k => {
+      rows.push(tempAgg[k]);
     });
+  } else {
+    for (let i = 1; i < lines.length; i++) {
+      const vals = parseCSVLine(lines[i]);
+      if (vals.length < 8) continue;
+      const obj = {};
+      for (let j = 0; j < 8; j++) {
+        if (headers[j]) obj[headers[j]] = (vals[j]||'').replace(/^"|"$/g,'').trim();
+      }
+      const slg = parseInt(obj['Slg_xe'] || obj['Slg xe'] || '0');
+      if (isNaN(slg) || slg <= 0) continue;
+      let pl = (obj['phanloai']||'').normalize('NFC').trim();
+      if (/nh[aậ]p/i.test(pl)) pl = 'Nhập';
+      else if (/xu[aấ]t/i.test(pl)) pl = 'Xuất';
+      rows.push({
+        ngay: obj['ngay']||'', stoppoint: obj['stoppoint_name']||'',
+        khung_gio: obj['khung_gio']||'', phanloai: pl,
+        trong_tai: obj['trong_tai']||'', lane_type: obj['lane_type']||'',
+        lo_trinh: obj['lo_trinh']||'', slg_xe: slg
+      });
+    }
   }
   return rows;
 }
