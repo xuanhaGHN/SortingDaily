@@ -52,7 +52,7 @@
 
     <div style="margin-top:auto;padding:16px 12px 8px;border-top:1px solid var(--border)">
       <div style="font-size:11px;color:var(--text2)">
-        <div style="font-weight:600;color:var(--text);margin-bottom:2px">Kho TC Hà Nội 02</div>
+        <div id="sidebar-stoppoint-badge" style="font-weight:600;color:var(--text);margin-bottom:2px">Tất cả kho</div>
         <div id="date-badge-sidebar" style="margin-top:2px"></div>
         <div id="data-status" style="margin-top:6px;font-size:10px"></div>
       </div>
@@ -64,13 +64,15 @@
     <div class="header">
       <h1 id="page-title">📊 Tổng quan Sorting</h1>
       <div class="header-right">
-        <!-- Date filter -->
+        <!-- Global filter -->
         <div class="date-filter">
-          <input type="date" id="filter-start" class="date-input">
+          <select id="filter-stoppoint" class="date-input" style="max-width:180px; text-overflow:ellipsis" onchange="applyGlobalFilters()">
+            <option value="">Tất cả kho</option>
+          </select>
+          <input type="date" id="filter-start" class="date-input" onchange="applyGlobalFilters()">
           <span style="color:var(--text2);font-size:12px">–</span>
-          <input type="date" id="filter-end" class="date-input">
-          <button onclick="applyDateFilter()" class="filter-btn">Lọc</button>
-          <button onclick="resetDateFilter()" class="filter-btn" style="background:var(--card2);color:var(--text2);border:1px solid var(--border)">↩</button>
+          <input type="date" id="filter-end" class="date-input" onchange="applyGlobalFilters()">
+          <button onclick="resetGlobalFilters()" class="filter-btn" style="background:var(--card2);color:var(--text2);border:1px solid var(--border)">↩</button>
         </div>
 
         <!-- Export group -->
@@ -611,7 +613,7 @@ async function loadData(){
     if(RAW_DATA.length===0) throw new Error('empty');
     DATA=[...RAW_DATA];
     document.getElementById('data-status').innerHTML = `<span style="color:var(--green)">●</span> Đã đồng bộ: ${fmt(RAW_DATA.length)} bản ghi`;
-    initDatePicker();
+    initGlobalFilters();
     startApp();
   } catch(e){
     console.warn('Fetch failed:',e.message);
@@ -636,37 +638,59 @@ function reloadData() {
   loadData();
 }
 
-// ===== DATE PICKER =====
-function initDatePicker(){
+// ===== GLOBAL FILTERS =====
+function initGlobalFilters(){
   const dates=[...new Set(RAW_DATA.map(r=>r.ngay))].sort();
-  if(!dates.length) return;
-  document.getElementById('filter-start').value=dates[0];
-  document.getElementById('filter-end').value=dates[dates.length-1];
-  updateDateBadge(dates[0],dates[dates.length-1]);
+  const stops=[...new Set(RAW_DATA.map(r=>r.stoppoint))].filter(Boolean).sort();
+  
+  const spSelect = document.getElementById('filter-stoppoint');
+  if(spSelect){
+    spSelect.innerHTML = '<option value="">Tất cả kho</option>' + stops.map(s=>`<option value="${escH(s)}">${escH(cleanStop(s)||s)}</option>`).join('');
+  }
+
+  if(dates.length){
+    document.getElementById('filter-start').value=dates[0];
+    document.getElementById('filter-end').value=dates[dates.length-1];
+    updateGlobalBadge(dates[0],dates[dates.length-1], '');
+  }
 }
 
-function applyDateFilter(){
+function applyGlobalFilters(){
   const start=document.getElementById('filter-start').value;
   const end=document.getElementById('filter-end').value;
+  const stop=document.getElementById('filter-stoppoint') ? document.getElementById('filter-stoppoint').value : '';
+  
   if(!start||!end) return;
-  DATA=RAW_DATA.filter(r=>r.ngay>=start&&r.ngay<=end);
-  updateDateBadge(start,end);
+  
+  DATA=RAW_DATA.filter(r => {
+    const dMatch = r.ngay>=start && r.ngay<=end;
+    const sMatch = stop ? r.stoppoint === stop : true;
+    return dMatch && sMatch;
+  });
+  
+  updateGlobalBadge(start,end,stop);
   startApp();
 }
 
-function resetDateFilter(){
+function resetGlobalFilters(){
   const dates=[...new Set(RAW_DATA.map(r=>r.ngay))].sort();
   if(!dates.length) return;
   document.getElementById('filter-start').value=dates[0];
   document.getElementById('filter-end').value=dates[dates.length-1];
+  if(document.getElementById('filter-stoppoint')) document.getElementById('filter-stoppoint').value = '';
+  
   DATA=[...RAW_DATA];
-  updateDateBadge(dates[0],dates[dates.length-1]);
+  updateGlobalBadge(dates[0],dates[dates.length-1], '');
   startApp();
 }
 
-function updateDateBadge(start,end){
-  const text=`📅 ${fmtD(start)} – ${fmtD(end)}`;
+function updateGlobalBadge(start,end,stop){
+  const text=\`📅 \${fmtD(start)} – \${fmtD(end)}\`;
   document.getElementById('date-badge-sidebar').textContent=text;
+  const stopBadge = document.getElementById('sidebar-stoppoint-badge');
+  if(stopBadge) {
+    stopBadge.textContent = stop ? (cleanStop(stop)||stop) : 'Tất cả kho';
+  }
 }
 
 // ===== START APP =====
