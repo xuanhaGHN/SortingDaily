@@ -325,11 +325,11 @@ select:focus{outline:none;border-color:var(--accent)}
 
 <script>
 // ===== GLOBALS =====
+const SHEET_ID = '1wdkjfAUmZfxczJQ72MJWySbN5qY9YWgxQjLkVRNsJYY';
 let DATA = [];
-let PROD_DATA = []; // Sản lượng thực tế (đơn + kg)
-let charts = {};
-const SHEET_ID = '1yPPDvKaDqx_4T_A_axv-d_MrXNWCc8Al00FmG2Pego0';
+let PROD_DATA = [];
 
+function fmt(num) { return num.toLocaleString('vi-VN'); }
 function escapeHTML(str) {
   if (!str) return '';
   return String(str)
@@ -340,8 +340,8 @@ function escapeHTML(str) {
     .replace(/'/g, '&#039;');
 }
 
-const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=1104033792`;
-const PROD_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=1105617326`;
+const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=1730908608`;
+const PROD_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=1730908608`;
 const VEHICLE_COSTS = {'1.9T':1200000,'5T':2500000,'6.5T':3200000,'8T':4000000,'15T':6500000};
 const VEHICLE_CAPS = {'1.9T':1.9,'5T':5,'6.5T':6.5,'8T':8,'15T':15};
 const TIME_SLOTS = Array.from({length:24},(_,i)=>`${i}--${i+1}`);
@@ -503,6 +503,7 @@ function parseCSV(text) {
   }
   return rows;
 }
+
 
 function parseCSVLine(line) {
   const result = []; let cur = ''; let inQuote = false;
