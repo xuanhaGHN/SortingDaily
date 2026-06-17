@@ -89,7 +89,10 @@ select:focus{outline:none;border-color:var(--accent)}
   /* Alert styles in HTML */
   .alert-item.danger{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.35);color:#ef4444}
   .alert-item.warning{background:rgba(245,158,11,.10);border:1px solid rgba(245,158,11,.3);color:#f59e0b}
-  
+  .date-filter{display:flex;align-items:center;gap:8px;background:var(--card);padding:4px 8px;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,0.05)}
+  .date-input{border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-family:inherit;font-size:13px;color:var(--text);outline:none}
+  .filter-btn{background:var(--accent);color:#fff;border:none;border-radius:6px;padding:6px 16px;font-weight:600;font-size:13px;cursor:pointer;transition:.2s}
+  .filter-btn:hover{opacity:0.9}
   .upload-zone{border:2px dashed var(--border);border-radius:16px;padding:32px;text-align:center;cursor:pointer;transition:.3s}
   .upload-zone:hover{border-color:var(--accent);background:rgba(242,101,34,.05)}
   .upload-zone input{display:none}
@@ -157,10 +160,12 @@ select:focus{outline:none;border-color:var(--accent)}
     <div class="header">
       <h1 id="page-title">📊 Tổng quan Sorting</h1>
       <div class="header-right">
-        <label class="upload-btn" id="upload-trigger">📁 Tải CSV
-          <input type="file" accept=".csv" id="file-input" style="display:none">
-        </label>
-        <div class="date-badge" id="date-badge">📅 01/05 – 21/05/2026</div>
+        <div class="date-filter">
+          <input type="date" id="filter-start" class="date-input">
+          <span style="color:var(--text2)">–</span>
+          <input type="date" id="filter-end" class="date-input">
+          <button onclick="applyDateFilter()" class="filter-btn">Lọc</button>
+        </div>
       </div>
     </div>
 
@@ -326,8 +331,11 @@ select:focus{outline:none;border-color:var(--accent)}
 <script>
 // ===== GLOBALS =====
 const SHEET_ID = '1wdkjfAUmZfxczJQ72MJWySbN5qY9YWgxQjLkVRNsJYY';
+let RAW_DATA = [];
+let RAW_PROD_DATA = [];
 let DATA = [];
 let PROD_DATA = [];
+let charts = {};
 
 function fmt(num) { return num.toLocaleString('vi-VN'); }
 function escapeHTML(str) {
@@ -609,6 +617,8 @@ function updateKPIs() {
 
 // ===== CHARTS =====
 function initCharts() {
+  Object.values(charts).forEach(c => c && typeof c.destroy === 'function' && c.destroy());
+  charts = {};
   Chart.defaults.plugins.datalabels = { display: false };
   const dates = getDates();
   const sel = document.getElementById('hourly-date');
@@ -1135,13 +1145,16 @@ async function loadData() {
       fetch(PROD_URL).then(r => r.ok ? r.text() : Promise.reject('prod'))
     ]);
     if (truckRes.status === 'fulfilled') {
-      DATA = parseCSV(truckRes.value);
+      RAW_DATA = parseCSV(truckRes.value);
+      DATA = RAW_DATA;
     }
     if (prodRes.status === 'fulfilled') {
-      PROD_DATA = parseProdCSV(prodRes.value);
+      RAW_PROD_DATA = parseProdCSV(prodRes.value);
+      PROD_DATA = RAW_PROD_DATA;
       console.log('Sản lượng loaded:', PROD_DATA.length, 'rows');
     }
-    if (DATA.length === 0) throw new Error('No valid truck data');
+    if (RAW_DATA.length === 0) throw new Error('No valid truck data');
+    initDatePicker();
     startApp();
   } catch(e) {
     console.warn('Fetch failed:', e.message, '— showing upload UI');
@@ -1158,16 +1171,22 @@ async function loadData() {
   }
 }
 
-function handleUpload(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(ev) {
-    DATA = parseCSV(ev.target.result);
-    if (DATA.length === 0) { alert('File CSV không hợp lệ hoặc không có dữ liệu.'); return; }
-    startApp();
-  };
-  reader.readAsText(file);
+function initDatePicker() {
+  if(!RAW_DATA.length) return;
+  const dates = [...new Set(RAW_DATA.map(d=>d.dt))].sort();
+  document.getElementById('filter-start').value = dates[0];
+  document.getElementById('filter-end').value = dates[dates.length-1];
+}
+
+function applyDateFilter() {
+  const start = document.getElementById('filter-start').value;
+  const end = document.getElementById('filter-end').value;
+  if(!start || !end) return;
+  
+  DATA = RAW_DATA.filter(d => d.dt >= start && d.dt <= end);
+  PROD_DATA = RAW_PROD_DATA.filter(d => d.dt >= start && d.dt <= end);
+  
+  startApp();
 }
 
 function startApp() {
@@ -1178,10 +1197,7 @@ function startApp() {
 
 }
 
-// File input in header
-document.getElementById('file-input').addEventListener('change', function(e) {
-  handleUpload(e);
-});
+
 
 // ===== INIT =====
 // Danh sách email được phép truy cập (Chữ thường)
