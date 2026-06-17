@@ -1173,7 +1173,7 @@ async function loadData() {
 
 function initDatePicker() {
   if(!RAW_DATA.length) return;
-  const dates = [...new Set(RAW_DATA.map(d=>d.dt))].sort();
+  const dates = [...new Set(RAW_DATA.map(d=>d.ngay))].sort();
   document.getElementById('filter-start').value = dates[0];
   document.getElementById('filter-end').value = dates[dates.length-1];
 }
@@ -1183,8 +1183,8 @@ function applyDateFilter() {
   const end = document.getElementById('filter-end').value;
   if(!start || !end) return;
   
-  DATA = RAW_DATA.filter(d => d.dt >= start && d.dt <= end);
-  PROD_DATA = RAW_PROD_DATA.filter(d => d.dt >= start && d.dt <= end);
+  DATA = RAW_DATA.filter(d => d.ngay >= start && d.ngay <= end);
+  PROD_DATA = RAW_PROD_DATA.filter(d => d.ngay >= start && d.ngay <= end);
   
   startApp();
 }
