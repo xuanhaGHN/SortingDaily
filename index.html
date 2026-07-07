@@ -6,6 +6,7 @@
 <title>Dashboard Sorting – Kho Trung Chuyển HN02</title>
 <meta name="description" content="Dashboard phân tích dữ liệu xe nhập xuất Kho Trung Chuyển Hà Nội 02">
 <meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://docs.google.com;">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
@@ -425,6 +426,9 @@
 </div><!-- /layout -->
 
 <script>
+(function() {
+let isAuthenticated = false;
+
 // ===== CONSTANTS & GLOBALS =====
 const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS3F4bVzC64UXZEEY5PMpqfq1VR7YPREGA39Sp0tOd7ZJkiPVykRr-xSQkI6gANnBTf6vB3_g35X-aL/pub?gid=1730908608&single=true&output=csv';
 
@@ -442,11 +446,11 @@ let _routeAll = []; // for search
 
 // Allowed email hashes (SHA-256)
 const ALLOWED_HASHES = [
-  '93133f1d9d1db72d368fb18e6637c0a3052d268c99bca99daf4817aded798142', // admin@ghn.vn
-  '58f8dbd8b423b17eb9520a32ec08c7f2b4a7500af21ac51081103c2aa4cc7fa3', // manager@ghn.vn
-  'ed527479f9dad4a203ba1038045b100f1588c408a59d6985ce0d66076e37245c', // xuanha@ghn.vn
-  '62fc70a8c42a1b407d8687ecdf37180dc29868a9226b8fd96559e2ed0c80ef6a', // leha@ghn.vn
-  '20d94ea05e3f2cfa7fdd26117e4afde7aeae32b01f243c9e39c89832e9e569bb'  // sorting@ghn.vn
+  '93133f1d9d1db72d368fb18e6637c0a3052d268c99bca99daf4817aded798142',
+  '58f8dbd8b423b17eb9520a32ec08c7f2b4a7500af21ac51081103c2aa4cc7fa3',
+  'ed527479f9dad4a203ba1038045b100f1588c408a59d6985ce0d66076e37245c',
+  '62fc70a8c42a1b407d8687ecdf37180dc29868a9226b8fd96559e2ed0c80ef6a',
+  '20d94ea05e3f2cfa7fdd26117e4afde7aeae32b01f243c9e39c89832e9e569bb'
 ];
 
 async function sha256(message) {
@@ -485,6 +489,7 @@ async function checkAuth(){
   const email = document.getElementById('auth-email').value.trim().toLowerCase();
   const hash = await sha256(email);
   if(ALLOWED_HASHES.includes(hash)){
+    isAuthenticated = true;
     document.getElementById('login-overlay').style.display='none';
     document.getElementById('loading').style.display='flex';
     loadData();
@@ -619,6 +624,7 @@ function parseCSV(text){
 
 // ===== DATA LOADING =====
 async function loadData(){
+  if(!isAuthenticated) return;
   try{
     document.getElementById('loading-text').textContent='Đang tải từ Google Sheet...';
     document.getElementById('loading').style.display='flex';
@@ -652,6 +658,7 @@ async function loadData(){
 }
 
 function handleUpload(e) {
+  if(!isAuthenticated) return;
   const file = e.target.files[0];
   if (!file) return;
   
@@ -1465,6 +1472,27 @@ function exportPDF(){
 }
 
 // ===== INIT =====
+
+  // Expose necessary handlers to window for HTML inline event handlers
+  window.checkAuth = checkAuth;
+  window.showPage = showPage;
+  window.applyGlobalFilters = applyGlobalFilters;
+  window.resetGlobalFilters = resetGlobalFilters;
+  window.handleUpload = handleUpload;
+  window.reloadData = reloadData;
+  window.exportCSV = exportCSV;
+  window.exportPDF = exportPDF;
+  window.toggleDark = toggleDark;
+  window.resetDetailFilters = resetDetailFilters;
+  window.updateHourlyChart = updateHourlyChart;
+  window.renderHeatmap = renderHeatmap;
+  window.updateDetailCharts = updateDetailCharts;
+  window.updateLaneDayChart = updateLaneDayChart;
+  window.updateVehHourCompare = updateVehHourCompare;
+  window.updateMultiDayChart = updateMultiDayChart;
+  window.updateProdHourChart = updateProdHourChart;
+  window.loadData = loadData;
+})();
 </script>
 </body>
 </html>
